@@ -10,9 +10,9 @@ plt.style.use('fivethirtyeight')
 #		pass
 
 df = pd.read_csv('../data/btc.csv')
-shortEMA=df.Close.ewm(span=2,adjust=False).mean()
-mediumEMA=df.Close.ewm(span=7,adjust=False).mean()
-longEMA=df.Close.ewm(span=15,adjust=False).mean()
+shortEMA=df.Close.ewm(span=5,adjust=False).mean()
+mediumEMA=df.Close.ewm(span=21,adjust=False).mean()
+longEMA=df.Close.ewm(span=63,adjust=False).mean()
 df['Short']=shortEMA
 df['Medium']=mediumEMA
 df['Long']=longEMA
@@ -24,7 +24,7 @@ def buy_sell(data):
 	flag_short=False
 
 	for i in range(0,len(data)):
-		if data['Medium'][i] < data['Long'][i] and data['Short'][i] < data['Medium'][i] and flag_long==False:
+		if data['Medium'][i] < data['Long'][i] and data['Short'][i] < data['Medium'][i] and flag_short==False and flag_long==False:
 			buy_list.append(data['Close'][i])
 			sell_list.append(np.nan)
 			flag_short=True
@@ -32,7 +32,7 @@ def buy_sell(data):
 			sell_list.append(data['Close'][i])
 			buy_list.append(np.nan)
 			flag_short=False
-		elif data['Medium'][i] > data['Long'][i] and data['Short'][i] > data['Medium'][i] and flag_long==False:
+		elif data['Medium'][i] > data['Long'][i] and data['Short'][i] > data['Medium'][i] and flag_long==False and flag_short==False:
 			buy_list.append(data['Close'][i])
 			sell_list.append(np.nan)
 			flag_long=True
@@ -45,8 +45,8 @@ def buy_sell(data):
 			sell_list.append(np.nan)
 	return (buy_list,sell_list)
 
-df['Buy'] = buy_sell(df)[0]
-df['Sell'] = buy_sell(df)[1]
+df['Buy'], df['Sell'] = buy_sell(df)
+
 
 plt.figure(figsize=(12.2,4.5))
 plt.title('BTC Price')

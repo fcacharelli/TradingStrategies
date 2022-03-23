@@ -8,19 +8,21 @@ class PruebaAPI(API):
 		self.__BTC=0
 		self.datos=pd.read_csv("../data/btc.csv")
 		inicio=random.randrange(2000)
-		self.ahora=inicio+100
+		self.top=3294-inicio
+		self.ahora=inicio+150
 		self.historial = self.datos.iloc[inicio:self.ahora+1,:]
 	def buy(self,price):
-		self.__BTC=self.__USD/price
+		self.__BTC=self.__BTC+self.__USD/price
 		self.__USD=0
 	def sell(self,price):
-		self.__USD=self.__BTC*price
+		self.__USD=self.__USD+self.__BTC*price
 		self.__BTC=0
 	def getPriceHistory(self):
 		return self.historial
 	def updatePrice(self):
-		self.ahora=self.ahora+1
-		self.historial=pd.concat([self.historial,self.datos.iloc[[self.ahora]]], ignore_index=False,axis=0)
+		if self.ahora<self.top:
+			self.ahora=self.ahora+1
+			self.historial=pd.concat([self.historial,self.datos.iloc[[self.ahora]]], ignore_index=False,axis=0)
 	def getCurrentPrice(self):
 		return self.historial["Close"].iloc[-1]
 	def netValue(self,price):

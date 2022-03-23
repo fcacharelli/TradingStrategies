@@ -12,15 +12,30 @@ class EMA(Bot):
 		self.historial = API.getPriceHistory()
 		self.getEMAs(self.historial)
 	def getEMAs(self,data):
-		data.ta.ema(length=5, append=True)
-		data.ta.ema(length=21, append=True)
-		data.ta.ema(length=63, append=True)
+		data.ta.ema(length=20, append=True)
+		data.ta.ema(length=70, append=True)
+		data.ta.ema(length=150, append=True)
 	def funcion(self):
-		while self.isRunning()==True:
-			self.getEMAs(bot.historial)
-			print(self.historial)
+		self.getEMAs(self.historial)
+		leng = 0
+		flag_short=False
+		flag_long=False
+		while self.isRunning()==True and leng != len(self.historial):
+			leng=len(self.historial)
+			if self.historial['EMA_70'].iloc[-1] < self.historial['EMA_150'].iloc[-1] and self.historial['EMA_20'].iloc[-1] < self.historial['EMA_70'].iloc[-1] and flag_short==False and flag_long==False:
+				self.API.buy(self.historial['Close'].iloc[-1])
+				flag_short=True
+			elif flag_short==True and self.historial['EMA_20'].iloc[-1] > self.historial['EMA_70'].iloc[-1]:
+				self.API.sell(self.historial['Close'].iloc[-1])
+				flag_short=False
+			elif self.historial['EMA_70'].iloc[-1] > self.historial['EMA_150'].iloc[-1] and self.historial['EMA_20'].iloc[-1] > self.historial['EMA_70'].iloc[-1] and flag_long==False and flag_short==False:
+				self.API.buy(self.historial['Close'].iloc[-1])
+				flag_long=True
+			elif flag_long==True and self.historial['EMA_20'].iloc[-1] < self.historial['EMA_70'].iloc[-1]:
+				self.API.sell(self.historial['Close'].iloc[-1])
+				flag_long=False
 			self.updatePrice()
-			time.sleep(2)
+		print(self.API.netValue(self.historial['Close'].iloc[-1]))
 
 API = PruebaAPI()
 bot = EMA(API)
