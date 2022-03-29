@@ -11,7 +11,7 @@ posframe['Invest'] = 10
 posframe['Quantity'] = 0
 
 def getHourlyData(symbol):
-	data = pd.DataFrame(yf.download(symbol, start=datetime.datetime.now()-datetime.timedelta(days = 3), interval="1m"))
+	data = pd.DataFrame(yf.download(symbol, start=datetime.datetime.now()-datetime.timedelta(days = 3), interval="1h"))
 	return data
 
 def applyTechnicals(df):
@@ -28,25 +28,36 @@ def changepos(curr,price,buy):
 		posframe.loc[posframe.Currency==curr,'Invest']=posframe.loc[posframe.Currency==curr,'Quantity']*price
 		posframe.loc[posframe.Currency==curr,'Quantity']=0
 
+def get_current_price(symbol):
+    ticker = yf.Ticker(symbol)
+    todays_data = ticker.history(period='1d')
+    return todays_data['Close'][0]
+
+def netValue():
+	value=0
+	for i in range(len(posframe)):
+		value=value+posframe.iloc[i]['Invest']+posframe.iloc[i]['Quantity']*get_current_price(posframe.iloc[i]['Currency'])
+	return value
+
+
 def trader():
 	for coin in posframe[posframe.Position==1].Currency:
 		df = getHourlyData(coin)
 		applyTechnicals(df)
 		lastrow=df.iloc[-1]
-		if lastrow.SlowSMA < lastrow.FastSMA:
+		if lastrow.SlowSMA > lastrow.FastSMA:
 			changepos(coin,lastrow.Close,buy=False)
-			print(posframe)
 			print(f'Sell {coin}')
 	for coin in posframe[posframe.Position==0].Currency:
 		df = getHourlyData(coin)
 		applyTechnicals(df)
 		lastrow=df.iloc[-1]
-		if lastrow.FastSMA < lastrow.SlowSMA:
+		if lastrow.FastSMA > lastrow.SlowSMA:
 			changepos(coin,lastrow.Close,buy=True)
-			print(posframe)
 			print(f'Buy {coin}')
-
+	print(posframe)
 while True:
 	trader()
-	time.sleep(60)
+	print(netValue())
+	time.sleep(3600)
 
