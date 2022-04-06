@@ -33,12 +33,18 @@ def getTrend(Mins,Maxs):
 
 symbol="ETH-BTC"
 
-data = pd.DataFrame(yf.download(symbol, start=datetime.datetime.now()-datetime.timedelta(days = 90), interval="1h"))
+data = pd.DataFrame(yf.download(symbol, start=datetime.datetime.now()-datetime.timedelta(days = 365), interval="1h"))
 
 mins,maxs=getMMs(data)
 Trend = getTrend(mins,maxs)
 
-df = pd.concat([data,Trend.set_index('Date')],axis=1)
+#df = pd.concat([data,Trend.set_index('Date')],axis=1)
+#print(df)
+bestbots=pd.read_csv('../data/bestbots.csv')
+bestbots=bestbots.set_index('Date')
+bestbots.index = pd.to_datetime(bestbots.index).tz_convert('Etc/UCT')
+#print(bestbots)
+df = pd.concat([data,Trend.set_index('Date'),bestbots],axis=1)
 print(df)
 
 plt.figure(figsize=(12.2,4.5))
@@ -46,6 +52,8 @@ plt.title('BTC Price')
 plt.plot(df['Close'], label='Close Price', color='blue',alpha=0.5)
 up = df.apply(lambda x: x['Close'] if (x['Trend']=='UP') else np.nan,axis=1)
 down = df.apply(lambda x: x['Close'] if (x['Trend']=='DOWN') else np.nan,axis=1)
-plt.scatter(df.index, up,color='green',marker='^',alpha=1)
-plt.scatter(df.index, down,color='red',marker='v',alpha=1)
+best = df.apply(lambda x: x['Close'] if (x['Best']==1) else np.nan,axis=1)
+#plt.scatter(df.index, up,color='green',marker='^',alpha=0.7)
+#plt.scatter(df.index, down,color='red',marker='v',alpha=0.7)
+plt.scatter(df.index, best,color='black',marker='*',alpha=1)
 plt.show()
